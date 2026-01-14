@@ -5,28 +5,185 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spodic - Focus.</title>
     <style>
+        :root {
+            --bg: #111111;
+            --text: #eeeeee;
+            --orp-color: #ff3b30;
+            --guide-color: #333;
+        }
+
         body {
-            background-color: #111;
-            color: #eee;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
+            cursor: auto;
         }
-        h1 {
+
+        /* The container determines the "Stage" */
+        .rsvp-container {
             font-size: 5rem;
-            letter-spacing: -2px;
-            margin-bottom: 0.5rem;
+            font-weight: 525;
+            display: flex;
+            align-items: baseline; /* Align text on the baseline */
+            justify-content: center;
+            position: relative;
+            height: 120px;
+            width: 100%;
         }
-        .red-letter { color: #ff3b30; } /* The RSVP Focus Point */
-        p { font-size: 1.2rem; opacity: 0.6; }
+
+        /* 
+           We split the word into 3 parts: Left, Center (ORP), Right.
+           The "Center" is fixed in the middle of the screen.
+           Left aligns right (towards center).
+           Right aligns left (away from center).
+        */
+        .segment {
+            display: inline-block;
+            white-space: pre;
+        }
+
+        #left-side {
+            text-align: right;
+            width: 50%;
+            padding-right: 2px;
+        }
+
+        #orp {
+            color: var(--orp-color);
+            width: auto;
+            text-align: center;
+            /* No fixed width ensures natural letter spacing, 
+               but we rely on flexbox to center this element exactly */
+        }
+
+        #right-side {
+            text-align: left;
+            width: 50%;
+            padding-left: 2px;
+        }
+
+        .guide {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            background-color: var(--guide-color);
+            height: 15px;
+        }
+        .guide-top { top: 0; }
+        .guide-bottom { bottom: 0; }
+
+        .footer {
+            position: absolute;
+            bottom: 50px;
+            font-size: 1rem;
+            color: #444;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
-    <h1>Sp<span class="red-letter">o</span>dic</h1>
-    <p>Read faster. Understand more.</p>
+
+    <div class="rsvp-container">
+        <div class="guide guide-top"></div>
+        <div class="guide guide-bottom"></div>
+
+        <span id="left-side" class="segment">Sp</span>
+        <span id="orp" class="segment">o</span>
+        <span id="right-side" class="segment">dic</span>
+    </div>
+
+    <div class="footer">Coming Soon</div>
+
+    <script>
+        const leftEl = document.getElementById('left-side');
+        const orpEl = document.getElementById('orp');
+        const rightEl = document.getElementById('right-side');
+
+        const fullText = `
+            Spodic. Read Faster. Understand more. 
+            It is incredible what the mind can do when it is not limited by the inner voice. 
+            Most people read at the same speed they speak. That is a bottleneck. 
+            Your brain can absorb visual data instantly. 
+            By fixing your eyes on one spot, we remove the friction of scanning and silence your mental voice. 
+            No eye movement. No searching. No distractions.
+            Welcome to the future of reading. 
+            Currently a work in progress. 
+            SEE YOU SOON.
+        `;
+
+        // Convert the text into a clean array of words
+        const sequence = fullText.replace(/\s+/g, ' ').trim().split(' ');
+
+        let index = 0;
+
+        // Scientific ORP Calculation
+        // Determines which letter should be red based on word length
+        function getOrpIndex(word) {
+            const len = word.length;
+            if (len <= 1) return 0;
+            if (len <= 5) return 1;
+            if (len <= 9) return 2;
+            if (len <= 13) return 3;
+            return 4;
+        }
+
+        function renderWord(word) {
+            const orpIndex = getOrpIndex(word);
+            
+            const leftText = word.slice(0, orpIndex);
+            const orpText = word[orpIndex];
+            const rightText = word.slice(orpIndex + 1);
+
+            leftEl.textContent = leftText;
+            orpEl.textContent = orpText;
+            rightEl.textContent = rightText;
+        }
+
+        function playLoop() {
+            const word = sequence[index];
+            renderWord(word);
+
+            let delay = 100 // Delay of 100ms which is 600 WPM
+            
+            // Pause on "Spodic" before continuing
+            if (index === 0) {
+                delay = 3000;
+            }
+            // Slow down the last 3 words (SEE YOU SOON.)
+            else if (index >= sequence.length - 3 && index < sequence.length - 1) {
+                delay = 500; // Slower for emphasis
+            } else if (index === sequence.length - 1) {
+                delay = 1000; // Long pause at the end
+            } else if (word.endsWith('.') || word.endsWith(',')) {
+                delay = 200;
+            } else if (word.length > 8) {
+                delay = 150;
+            }
+
+            index++;
+            if (index >= sequence.length) {
+                index = 0;
+            }
+
+            setTimeout(playLoop, delay);
+        }
+
+        renderWord("Spodic");
+
+        setTimeout(() => {
+            index = 1; // Start from "Read"
+            playLoop();
+        }, 3000);
+
+    </script>
 </body>
 </html>
